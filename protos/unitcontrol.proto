@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package unitcontrol;
+
+service UnitControl {
+    rpc getPosition (UnitPositionRequest) returns (UnitPositionReply) {}
+    rpc sendToPosition (UnitSendRequest) returns (UnitSendReply) {}
+}
+
+service MCCRegister {
+    rpc register (RegisterRequest) returns (RegisterReply) {}
+    rpc position (UnitPositionReply) returns (UnitSendReply) {}
+}
+
+message UnitPositionRequest {
+    int32 id = 1;
+    string session = 3;
+    string name = 2;
+}
+
+message UnitPositionReply {
+    int32 id = 1;
+    string session = 2;
+    enum StateType {
+        idle = 0;
+        moving = 1;
+        disabled = 2;
+    }
+    StateType state = 3;
+    float x = 4;
+    float y = 5;
+    float vx = 6;
+    float vy = 7;
+    float ax = 8;
+    float ay = 9;
+    float epsilon = 10;
+}
+
+message UnitSendRequest {
+    int32 id = 1;
+    string session = 2;
+    float x = 3;
+    float y = 4;
+    float vx = 5;
+    float vy = 6;
+    float ax = 7;
+    float ay = 8;
+    float epsilon = 9;
+}
+
+message UnitSendReply {
+    int32 id = 1;
+    string session = 2;
+    enum StateType {
+        idle = 0;
+        moving = 1;
+        disabled = 2;
+    }
+    StateType state = 3;
+}
+
+message RegisterRequest {
+    int32 id = 1;
+    string name = 2;
+}
+
+message RegisterReply {
+    int32 id = 1;
+    string name = 2;
+    string session = 3;
+}

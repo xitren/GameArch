@@ -1,0 +1,9 @@
+{
+	"name": "Unit container",
+	// "dockerFile": "../docker/dev.Dockerfile",
+	"image": "test:1"
+	// "workspaceMount": "source=${localWorkspaceFolder},target=/home/unit,type=bind,consistency=delegated",
+	// "dockerComposeFile": "../docker/docker-compose-world.yml",
+	// "service": "unit",
+	// "workspaceFolder": "/workspace/game"
+}

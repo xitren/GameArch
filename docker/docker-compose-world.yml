@@ -1,0 +1,43 @@
+version: '3'
+services:
+  unit:
+    volumes:
+      # Mounts the project folder to '/workspace'. While this file is in .devcontainer,
+      # mounts are relative to the first file in the list, which is a level up.
+      - .:/home/unit:cached
+    build:
+      context: "./"
+      dockerfile: dev.Dockerfile
+    ports:
+      - 3391:3391
+    networks:
+      - world
+      # depends_on:
+      #   - db
+      # links:
+      #   - db
+      # volumes:
+      #Swap the folder path for plugin vs theme development
+
+      # db:
+      #   image: mariadb:10
+      #   environment:
+      #     MYSQL_DATABASE: wordpress
+      #     MYSQL_USER: wp_user
+      #     MYSQL_PASSWORD: wp_pass
+      #     MYSQL_RANDOM_ROOT_PASSWORD: '1'
+      #   ports:
+      #     - 3306:3306
+      #   volumes:
+      #     - data:/var/lib/mysql
+
+      # volumes:
+      #   wordpress:
+      #   data:
+
+networks:
+  world:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.129.0/24
