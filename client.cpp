@@ -1,5 +1,5 @@
 
-#include "stringreverse.grpc.pb.h"
+#include "unitcontrol.grpc.pb.h"
 
 #include <grpcpp/grpcpp.h>
 
@@ -9,35 +9,37 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
-using stringreverse::StringReply;
-using stringreverse::StringRequest;
-using stringreverse::StringReverse;
+using unitcontrol::RegisterRequest;
+using unitcontrol::RegisterReply;
+using unitcontrol::UnitPositionReply;
+using unitcontrol::UnitSendReply;
+using unitcontrol::MCCRegister;
 
-class StringReverseClient {
+class MCCClient {
 public:
-    StringReverseClient(std::shared_ptr<Channel> channel) : stub_(StringReverse::NewStub(channel))
+    MCCClient(std::shared_ptr<Channel> channel) : stub_(MCCRegister::NewStub(channel))
     {}
 
     // Assembles client payload, sends it to the server, and returns its response
     std::string
-    sendRequest(std::string a)
+    registerUnit(std::string name)
     {
         // Data to be sent to server
-        StringRequest request;
-        request.set_original(a);
+        RegisterRequest request;
+        request.set_name(name);
 
         // Container for server response
-        StringReply reply;
+        RegisterReply reply;
 
         // Context can be used to send meta data to server or modify RPC behaviour
         ClientContext context;
 
         // Actual Remote Procedure Call
-        Status status = stub_->sendRequest(&context, request, &reply);
+        Status status = stub_->registerUnit(&context, request, &reply);
 
         // Returns results based on RPC status
         if (status.ok()) {
-            return reply.reversed();
+            return reply.session();
         } else {
             std::cout << status.error_code() << ": " << status.error_message() << std::endl;
             return "RPC Failed";
@@ -45,7 +47,7 @@ public:
     }
 
 private:
-    std::unique_ptr<StringReverse::Stub> stub_;
+    std::unique_ptr<MCCRegister::Stub> stub_;
 };
 
 void
@@ -53,7 +55,7 @@ RunClient()
 {
     std::string target_address("localhost:50051");
     // Instantiates the client
-    StringReverseClient client(
+    MCCClient client(
         // Channel from which RPCs are made - endpoint is the target_address
         grpc::CreateChannel(target_address,
                             // Indicate when channel is not authenticated
@@ -65,7 +67,7 @@ RunClient()
     // Wait for server 5 sec
 
     // RPC is created and response is stored
-    response = client.sendRequest(a);
+    response = client.registerUnit(a);
 
     // Prints results
     std::cout << "Original string: " << a << std::endl;

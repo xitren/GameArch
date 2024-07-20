@@ -8,8 +8,8 @@ service UnitControl {
 }
 
 service MCCRegister {
-    rpc register (RegisterRequest) returns (RegisterReply) {}
-    rpc position (UnitPositionReply) returns (UnitSendReply) {}
+    rpc registerUnit (RegisterRequest) returns (RegisterReply) {}
+    rpc unitPosition (UnitPositionReply) returns (UnitSendReply) {}
 }
 
 message UnitPositionRequest {
