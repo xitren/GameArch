@@ -14,8 +14,8 @@ service MCCRegister {
 
 message UnitPositionRequest {
     int32 id = 1;
-    string session = 3;
-    string name = 2;
+    string session = 2;
+    string name = 3;
 }
 
 message UnitPositionReply {

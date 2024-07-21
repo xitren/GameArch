@@ -8,12 +8,58 @@
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
+using grpc::Server;
+using grpc::ServerBuilder;
+using grpc::ServerContext;
 
 using unitcontrol::RegisterRequest;
 using unitcontrol::RegisterReply;
 using unitcontrol::UnitPositionReply;
+using unitcontrol::UnitPositionRequest;
 using unitcontrol::UnitSendReply;
+using unitcontrol::UnitSendRequest;
 using unitcontrol::MCCRegister;
+using unitcontrol::UnitControl;
+
+class UnitControlImplementation final : public UnitControl::Service {
+private:
+    std::string                  server_address = "0.0.0.0:50052";
+    std::unique_ptr<Server>      server{};
+
+    const float dx{0.05}, dy{0.05};
+    float   x{},y{},vx{},vy{},ax{},ay{};
+    float   targ_x{},targ_y{},epsilon{};
+
+    Status
+    getPosition(ServerContext* context, const UnitPositionRequest* request, UnitPositionReply* reply) override
+    {
+        return Status::OK;
+    }
+
+    Status
+    sendToPosition(ServerContext* context, const UnitSendRequest* request, UnitSendReply* reply) override
+    {
+        return Status::OK;
+    }
+
+public:
+    UnitControlImplementation() {
+        ServerBuilder builder;
+        // Listen on the given address without any authentication mechanism
+        builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+        // Register "service" as the instance through which
+        // communication with client takes place
+        builder.RegisterService(this);
+
+        // Assembling the server
+        server = builder.BuildAndStart();
+        std::cout << "Server listening on port: " << server_address << std::endl;
+    }
+
+    void Wait() {
+        server->Wait();
+    }
+};
 
 class MCCClient {
 public:
