@@ -37,20 +37,30 @@ add_custom_command(
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
+include(FetchContent)
+FetchContent_Declare(
+		patterns
+		GIT_REPOSITORY https://github.com/xitren/patterns.git
+		GIT_TAG        v1.0.1
+)
+FetchContent_MakeAvailable(patterns)
+
 foreach(_target
         client server)
-    add_executable(${_target} "${_target}.cpp"
-            ${hw_proto_srcs}
-            ${hw_grpc_srcs})
-    target_link_libraries(${_target}
-            ${_REFLECTION}
-            ${_GRPC_GRPCPP}
-            ${_PROTOBUF_LIBPROTOBUF})
-    target_compile_features(${_target} PUBLIC cxx_std_20)
-    target_compile_options(${_target}
-            PRIVATE
-            -Wall -Wextra -Wpedantic -Weffc++ -Wc++20-compat)
-    target_link_options(${_target}
-            PRIVATE
-            -Wl,-demangle)
+        add_executable(${_target} "${_target}.cpp"
+                ${hw_proto_srcs}
+                ${hw_grpc_srcs})
+
+        target_link_libraries(${_target}
+                ${_REFLECTION}
+                ${_GRPC_GRPCPP}
+                ${_PROTOBUF_LIBPROTOBUF}
+                patterns_lib)
+        target_compile_features(${_target} PUBLIC cxx_std_20)
+        target_compile_options(${_target}
+                PRIVATE
+                -Wall -Wextra -Wpedantic -Weffc++ -std=c++20 -Wc++20-compat)
+        target_link_options(${_target}
+                PRIVATE
+                -Wl,-demangle)
 endforeach()

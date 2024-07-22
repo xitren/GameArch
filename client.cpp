@@ -2,8 +2,10 @@
 #include "unitcontrol.grpc.pb.h"
 
 #include <grpcpp/grpcpp.h>
+#include <xitren/func/interval_event.hpp>
 
 #include <string>
+#include <cmath>
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -22,7 +24,10 @@ using unitcontrol::UnitSendRequest;
 using unitcontrol::MCCRegister;
 using unitcontrol::UnitControl;
 
-class UnitControlImplementation final : public UnitControl::Service {
+using namespace xitren::func;
+using namespace std::chrono;
+
+class UnitControlImplementation final : public UnitControl::Service, public interval_event {
 private:
     std::string                  server_address = "0.0.0.0:50052";
     std::unique_ptr<Server>      server{};
@@ -43,11 +48,11 @@ private:
     } position{};
 
     struct PositionTarget {
-        float targ_x{};
-        float targ_y{};
+        float targ_x{5};
+        float targ_y{3};
         float targ_vx{};
         float targ_vy{};
-        float epsilon{};
+        float epsilon{1};
     } target{};
 
     Status
@@ -55,7 +60,6 @@ private:
     {
         reply->set_id(request->id());
         reply->set_session(request->session());
-        reply->set_name(request->name());
         reply->set_state(state);
         reply->set_x(position.x);
         reply->set_y(position.y);
@@ -81,8 +85,39 @@ private:
         return Status::OK;
     }
 
+    void
+    moveUnit() {
+        const auto diff_x = target.targ_x - position.x;
+        if (std::abs(diff_x) > target.epsilon) {
+            if ((diff_x) > 0) {
+                position.x += params.dx;
+            }
+            if ((diff_x) < 0) {
+                position.x -= params.dx;
+            }
+        }
+        const auto diff_y = target.targ_y - position.y;
+        if (std::abs(diff_y) > target.epsilon) {
+            if ((diff_y) > 0) {
+                position.y += params.dy;
+            }
+            if ((diff_y) < 0) {
+                position.y += params.dy;
+            }
+        }
+    }
+    
+
 public:
-    UnitControlImplementation() {
+    UnitControlImplementation() : interval_event(
+        [&]() {
+            std::cout << "Pos x: " << position.x << 
+                         " Pos y: " << position.y <<
+                         " Targ x: " << target.targ_x <<
+                         " Targ y: " << target.targ_y << std::endl;
+            moveUnit();
+        },
+        100ms, 1ms) {
         ServerBuilder builder;
         // Listen on the given address without any authentication mechanism
         builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
@@ -138,6 +173,7 @@ private:
 void
 RunClient()
 {
+    UnitControlImplementation unit;
     std::string target_address("localhost:50051");
     // Instantiates the client
     MCCClient client(
@@ -147,16 +183,18 @@ RunClient()
                             grpc::InsecureChannelCredentials()));
 
     std::string response;
-    std::string a = "grpc is cool!";
+    std::string a = "Test Unit!";
 
     // Wait for server 5 sec
+    std::this_thread::sleep_for(5s);
 
     // RPC is created and response is stored
     response = client.registerUnit(a);
 
     // Prints results
-    std::cout << "Original string: " << a << std::endl;
-    std::cout << "Reversed string: " << response << std::endl;
+    std::cout << "Original name: " << a << std::endl;
+    std::cout << "Session: " << response << std::endl;
+    unit.Wait();
 }
 
 int
