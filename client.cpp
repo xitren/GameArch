@@ -15,6 +15,7 @@ using grpc::ServerContext;
 using unitcontrol::RegisterRequest;
 using unitcontrol::RegisterReply;
 using unitcontrol::UnitPositionReply;
+using unitcontrol::UnitPositionReply_StateType;
 using unitcontrol::UnitPositionRequest;
 using unitcontrol::UnitSendReply;
 using unitcontrol::UnitSendRequest;
@@ -25,20 +26,58 @@ class UnitControlImplementation final : public UnitControl::Service {
 private:
     std::string                  server_address = "0.0.0.0:50052";
     std::unique_ptr<Server>      server{};
+    UnitPositionReply_StateType  state{UnitPositionReply_StateType::UnitPositionReply_StateType_idle};
 
-    const float dx{0.05}, dy{0.05};
-    float   x{},y{},vx{},vy{},ax{},ay{};
-    float   targ_x{},targ_y{},epsilon{};
+    const struct TechParameters {
+        float dx{0.05};
+        float dy{0.05};
+    } params{};
+
+    struct PositionState {
+        float x{};
+        float y{};
+        float vx{};
+        float vy{};
+        float ax{};
+        float ay{};
+    } position{};
+
+    struct PositionTarget {
+        float targ_x{};
+        float targ_y{};
+        float targ_vx{};
+        float targ_vy{};
+        float epsilon{};
+    } target{};
 
     Status
     getPosition(ServerContext* context, const UnitPositionRequest* request, UnitPositionReply* reply) override
     {
+        reply->set_id(request->id());
+        reply->set_session(request->session());
+        reply->set_name(request->name());
+        reply->set_state(state);
+        reply->set_x(position.x);
+        reply->set_y(position.y);
+        reply->set_vx(position.vx);
+        reply->set_vy(position.vy);
+        reply->set_ax(position.ax);
+        reply->set_ay(position.ay);
+        reply->set_x(position.x);
         return Status::OK;
     }
 
     Status
     sendToPosition(ServerContext* context, const UnitSendRequest* request, UnitSendReply* reply) override
     {
+        target.targ_x = request->x();
+        target.targ_y = request->y();
+        target.targ_vx = request->vx();
+        target.targ_vy = request->vy();
+        target.epsilon = request->epsilon();
+        reply->set_id(request->id());
+        reply->set_session(request->session());
+        // reply->set_state(state);
         return Status::OK;
     }
 
